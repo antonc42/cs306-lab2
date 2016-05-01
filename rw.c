@@ -42,6 +42,8 @@
 #include <limits.h>
 // include for errors
 #include <errno.h>
+// include for typecasting
+#include <stdint.h>
 
 // executable name
 #define BIN_NAME "rw"
@@ -141,7 +143,7 @@ void * writer_thr(void * arg) {
 */
 void * reader_thr(void *arg) {
 	printf("Reader thread ID %ld\n", pthread_self());
-	srand(*((unsigned int *) arg));   /* set random number seed for this reader */
+	srand((unsigned int) (uintptr_t) &arg);   /* set random number seed for this reader */
 	
 	int i, j;
 	int r_idx;
@@ -186,7 +188,7 @@ void * reader_thr(void *arg) {
 			if (account_list[i].accno == read_acc[j].accno) {
 				/* Now lock and update */
 				/* TODO YOUR CODE FOR THE READER GOES IN HERE */
-			
+				
 			}
 		}
 		if (!found) {
@@ -236,6 +238,7 @@ int main (int argc, char *argv[]) {
 	time_t t;
 	unsigned int seed;
 	int i;
+	void *result;
 	
 	/* number of readers to create */
 	int READ_THREADS = 0;
@@ -275,6 +278,12 @@ int main (int argc, char *argv[]) {
 	for (i = 0;i < READ_THREADS;i++) {
 		seed = (unsigned int) time(&t);
 		/* TODO YOUR CODE GOES HERE */
+		// create threads
+		if (pthread_create(reader_idx + i, NULL, reader_thr, (void *) (uintptr_t) seed) != 0) {
+			fprintf(stderr, "%s: error creating thread: %s\n", BIN_NAME, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		printf("reader thread id: %ld\n", (long int) reader_idx[i]);
 	}
 	printf("Done creating reader threads!\n");
 	
@@ -282,12 +291,25 @@ int main (int argc, char *argv[]) {
 	for (i = 0;i < WRITE_THREADS;i++) {
 		seed = (unsigned int) time(&t);
 		/* YOUR CODE GOES HERE */
+		if (pthread_create(writer_idx + i, NULL, writer_thr, (void *) (uintptr_t) seed) != 0) {
+			fprintf(stderr, "%s: error creating thread: %s\n", BIN_NAME, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		printf("writer thread id: %ld\n", (long int) reader_idx[i]);
 	}
 	printf("Done creating writer threads!\n");
 	// Join all reader and writer threads.
 	//TODO YOUR CODE GOES HERE. 
+	for (i = 0;i < READ_THREADS;i++) {
+		pthread_join(reader_idx[i], &result);
+		printf("Joined reader %d id %ld\n", i, reader_idx[i]);
+	}
 	printf("Reader threads joined.\n");
 	 
+	for (i = 0;i < WRITE_THREADS;i++) {
+		pthread_join(writer_idx[i], &result);
+		printf("Joined writer %d id %ld\n", i, reader_idx[i]);
+	}
 	printf("Writer threads joined.\n");
 	
 	/* clean-up - always a good thing to do! */
