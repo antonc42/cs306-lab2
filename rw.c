@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define SLOWNESS 30000
 #define INVALID_ACCNO -99999
@@ -45,11 +46,8 @@ void rest() {
 }
 
 
-/* Include the rw.h header file for necessary initializations. 
-   YOUR CODE GOES HERE. 
-*/
-...
-
+// Include the rw.h header file for necessary initializations. 
+#include "rw.h"
 
 
 /* Global shared data structure */
@@ -59,8 +57,8 @@ account account_list[SIZE];				/* this is the data structure that the readers an
 /* Define your global CS access variables for the Reader-writer problem.
    YOUR CODE GOES HERE.
 */
-...
-
+pthread_mutex_t r_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t rw_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 
@@ -115,16 +113,16 @@ void * writer_thr(void * arg) {
 				   Additionally, your code must also introduce checks/test to detect possible corruption due to race condition from CS violations.	
 				*/
 				/* YOUR CODE FOR THE WRITER GOES IN HERE */
-				...
 				rest();                 /* makes the write long duration - PLACE THIS IN THE CORRECT PLACE SO AS TO INTRODUCE LATENCY IN WRITE before going for next 'j' */
 
 
 
 	
+            }
         }
-        if (!found)
+        if (!found) {
             fprintf(fd, "Failed to find account number %d!\n", update_acc[j].accno);
-
+        }
     }   // end test-set for-loop
 
 	fclose(fd);
@@ -183,14 +181,14 @@ void * reader_thr(void *arg) {
             if (account_list[i].accno == read_acc[j].accno) {
                 /* Now lock and update */
 				/* YOUR CODE FOR THE READER GOES IN HERE */
-        		...
 
 
 		
 		}
-
-        if (!found)
+	}
+        if (!found) {
             fprintf(fd, "Failed to find account number %d!\n", read_acc[j].accno);
+	}
     }   // end test-set for-loop
 
     fclose(fd);
@@ -216,13 +214,13 @@ void usage(char *str) {
 }
 
 
-int main(int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
 	time_t t;
 	unsigned int seed;
 	int i;
 
 	int READ_THREADS;			/* number of readers to create */
-	int WRITE_THREAD;			/* number of writers to create */
+	int WRITE_THREADS;			/* number of writers to create */
 	
 	/* Generate a list of account informations. This will be used as the input to the Reader/Writer threads. */
 	create_testset();
@@ -233,19 +231,17 @@ int main(int argc, char *argv[]) {
 	   For reference on getopt(), see "man getopt(3)" 
 	*/
 	/* YOUR CODE GOES HERE */
-	...
 
 
 
 
-	pthread_t* reader_idx = (pthread_t *) malloc(sizeof(pthread_t) * READ_THREADS;		/* holds thread IDs of readers */
-	pthread_t writer_idx  = (pthread_t *) malloc(sizeof(pthread_t) * WRITE_THREADS;		/* holds thread IDs of writers */
+	pthread_t* reader_idx = (pthread_t *) malloc(sizeof(pthread_t) * READ_THREADS);		/* holds thread IDs of readers */
+	pthread_t writer_idx  = (pthread_t *) malloc(sizeof(pthread_t) * WRITE_THREADS);		/* holds thread IDs of writers */
 	
 	/* create readers */
   	for (i = 0;i < READ_THREADS;i++) {
 		seed = (unsigned int) time(&t);
 		/* YOUR CODE GOES HERE */
-		...
 
 	
 	}
@@ -255,7 +251,6 @@ int main(int argc, char *argv[]) {
   	for (i = 0;i < WRITE_THREADS;i++) {
 		seed = (unsigned int) time(&t);
 		/* YOUR CODE GOES HERE */
-  		...
 
 
 
@@ -265,7 +260,6 @@ int main(int argc, char *argv[]) {
   	/* Join all reader and writer threads.
        YOUR CODE GOES HERE. 
     */
-	...
 
 
 
