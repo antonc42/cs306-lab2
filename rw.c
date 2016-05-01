@@ -36,6 +36,12 @@
 #include <pthread.h>
 // include unistd.h for getopt
 #include <unistd.h>
+// include string library
+#include <string.h>
+// include limits
+#include <limits.h>
+// include for errors
+#include <errno.h>
 
 // executable name
 #define BIN_NAME "rw"
@@ -45,8 +51,8 @@
 
 // sleep function
 void rest() {
-    //usleep(SLOWNESS * (rand() % (READ_THREADS + WRITE_THREADS)));
-    usleep(100);
+	//usleep(SLOWNESS * (rand() % (READ_THREADS + WRITE_THREADS)));
+	usleep(100);
 }
 
 
@@ -216,9 +222,9 @@ int main (int argc, char *argv[]) {
 	int i;
 	
 	/* number of readers to create */
-	int READ_THREADS;
+	int READ_THREADS = 0;
 	/* number of writers to create */
-	int WRITE_THREADS;
+	int WRITE_THREADS = 0;
 	
 	/* Generate a list of account informations. This will be used as the input to the Reader/Writer threads. */
 	create_testset();
@@ -229,11 +235,40 @@ int main (int argc, char *argv[]) {
 	   For reference on getopt(), see "man getopt(3)" 
 	*/
 	/* TODO YOUR CODE GOES HERE */
+	int opt;
+	char *endptr;
+	long int temparg;
+	while ((opt = getopt(argc, argv, "r:w:")) != -1) {
+		switch (opt) {	
+			case 'r':
+				errno = 0;
+				temparg = (optarg, &endptr, 10);
+				if ((errno == ERANGE && (temparg == LONG_MAX || temparg == LONG_MIN)) || (errno != 0 && temparg == 0)) {
+					perror(strcat(BIN_NAME, ": argument not an integer"));
+					usage(BIN_NAME);
+					exit(EXIT_FAILURE);
+				}
+				if (endptr == optarg) {
+					usage(BIN_NAME);
+				}
+				printf("%ld\n", temparg);
+				READ_THREADS = atoi(optarg);
+				break;
+			case 'w':
+				temparg = (optarg, &endptr, 10);
+				printf("%d\n", atoi(optarg));
+				WRITE_THREADS = atoi(optarg);
+				break;
+			default:
+				usage(BIN_NAME);
+				exit(EXIT_FAILURE);
+		}
+	}
 	
 	/* holds thread IDs of readers */
 	pthread_t* reader_idx = (pthread_t *) malloc(sizeof(pthread_t) * READ_THREADS);
 	/* holds thread IDs of writers */
-	pthread_t writer_idx  = (pthread_t *) malloc(sizeof(pthread_t) * WRITE_THREADS);
+	pthread_t* writer_idx  = (pthread_t *) malloc(sizeof(pthread_t) * WRITE_THREADS);
 	
 	/* create readers */
 	for (i = 0;i < READ_THREADS;i++) {
