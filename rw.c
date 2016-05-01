@@ -215,6 +215,22 @@ void usage(char *str) {
 	return;
 }
 
+long int check_int_arg(char *arg) {
+	char *endptr;
+	long int intarg;
+	errno = 0;
+	intarg = strtol(arg, &endptr, 10);
+	if ((errno == ERANGE && (intarg == LONG_MAX || intarg == LONG_MIN)) || (errno != 0 && intarg == 0)) {
+		fprintf(stderr, "%s: error converting argument to integer: %s\n", BIN_NAME, strerror(errno));
+		usage(BIN_NAME);
+		exit(EXIT_FAILURE);
+	}
+	if ((endptr == arg) || (*endptr != '\0')) {
+		usage(BIN_NAME);
+		exit(EXIT_FAILURE);
+	}
+	return intarg;
+}
 
 int main (int argc, char *argv[]) {
 	time_t t;
@@ -236,28 +252,13 @@ int main (int argc, char *argv[]) {
 	*/
 	/* TODO YOUR CODE GOES HERE */
 	int opt;
-	char *endptr;
-	long int temparg;
 	while ((opt = getopt(argc, argv, "r:w:")) != -1) {
 		switch (opt) {	
 			case 'r':
-				errno = 0;
-				temparg = (optarg, &endptr, 10);
-				if ((errno == ERANGE && (temparg == LONG_MAX || temparg == LONG_MIN)) || (errno != 0 && temparg == 0)) {
-					perror(strcat(BIN_NAME, ": argument not an integer"));
-					usage(BIN_NAME);
-					exit(EXIT_FAILURE);
-				}
-				if (endptr == optarg) {
-					usage(BIN_NAME);
-				}
-				printf("%ld\n", temparg);
-				READ_THREADS = atoi(optarg);
+				READ_THREADS = (int) check_int_arg(optarg);
 				break;
 			case 'w':
-				temparg = (optarg, &endptr, 10);
-				printf("%d\n", atoi(optarg));
-				WRITE_THREADS = atoi(optarg);
+				WRITE_THREADS = (int) check_int_arg(optarg);
 				break;
 			default:
 				usage(BIN_NAME);
