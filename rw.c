@@ -66,9 +66,7 @@ void rest() {
 /* this is the data structure that the readers and writers will be accessing concurrently.*/
 account account_list[SIZE];
 
-/* Define your global CS access variables for the Reader-writer problem.
-   YOUR CODE GOES HERE.
-*/
+// Define your global CS access variables for the Reader-writer problem.
 pthread_mutex_t r_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rw_lock = PTHREAD_MUTEX_INITIALIZER;
 int read_count = 0;
@@ -125,7 +123,6 @@ void * writer_thr(void * arg) {
 				   For every successful update to the account_list, you must write a log entry using the following format string:
 				   fprintf(fd, "Account number = %d [%d]: old balance = %6.2f, new balance = %6.2f\n",
 				   account_list[i].accno, update_acc[j].accno, account_list[i].balance, update_acc[j].balance);
-				   
 				   Additionally, your code must also introduce checks/test to detect possible corruption due to race condition from CS violations.
 				*/
 				/* TODO YOUR CODE FOR THE WRITER GOES IN HERE */
@@ -135,7 +132,7 @@ void * writer_thr(void * arg) {
 				account_list[i].accno = INVALID_ACCNO;
 				account_list[i].balance = update_acc[j].balance;
 				account_list[i].accno = temp_accno;
-				fprintf(fd, "iter %d: Account number = %d [%d]: old balance = %6.2f, new balance = %6.2f\n", j,
+				fprintf(fd, "Account number = %d [%d]: old balance = %6.2f, new balance = %6.2f\n",
                                    account_list[i].accno, update_acc[j].accno, temp_balance, account_list[i].balance);
 				pthread_mutex_unlock(&rw_lock);
 				found = TRUE;
@@ -206,7 +203,7 @@ void * reader_thr(void *arg) {
 				if (read_count == 1) { pthread_mutex_lock(&rw_lock); }
 				pthread_mutex_unlock(&r_lock);
 				read_acc[j].balance = account_list[i].balance;
-				fprintf(fd, "iter %d: Account number = %d [%d], balance read = %6.2f\n", j,
+				fprintf(fd, "Account number = %d [%d], balance read = %6.2f\n",
 					account_list[i].accno, read_acc[j].accno, read_acc[j].balance);
 				pthread_mutex_lock(&r_lock);
 				read_count--;
@@ -327,13 +324,13 @@ int main (int argc, char *argv[]) {
 		pthread_join(reader_idx[i], &result);
 		printf("Joined reader %d id %ld\n", i, reader_idx[i]);
 	}
-	printf("Reader threads joined.\n");
+	printf("All reader threads joined.\n");
 	 
 	for (i = 0;i < WRITE_THREADS;i++) {
 		pthread_join(writer_idx[i], &result);
 		printf("Joined writer %d id %ld\n", i, reader_idx[i]);
 	}
-	printf("Writer threads joined.\n");
+	printf("All writer threads joined.\n");
 	
 	/* clean-up - always a good thing to do! */
 	pthread_mutex_destroy(&r_lock);
