@@ -71,6 +71,7 @@ account account_list[SIZE];
 */
 pthread_mutex_t r_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rw_lock = PTHREAD_MUTEX_INITIALIZER;
+int read_count = 0;
 
 
 
@@ -80,10 +81,11 @@ pthread_mutex_t rw_lock = PTHREAD_MUTEX_INITIALIZER;
 void * writer_thr(void * arg) {
 	printf("Writer thread ID %ld\n", pthread_self());
 	/* set random number seed for this writer */
-	srand(*((unsigned int *) arg));
+	srand((unsigned int) (uintptr_t) &arg);
 	int i, j;
 	int r_idx;
-	unsigned char found;            /* For every update_acc[j], set to TRUE if found in account_list, else set to FALSE */
+	/* For every update_acc[j], set to TRUE if found in account_list, else set to FALSE */
+	unsigned char found;
 	account update_acc[WRITE_ITR];
 	
 	/* first create a random data set of account updates */
@@ -109,6 +111,7 @@ void * writer_thr(void * arg) {
 	*/
 	
 	int temp_accno;
+	float temp_balance;
 	/* The writer thread will now to update the shared account_list data structure */
 	for (j = 0; j < WRITE_ITR;j++) {
 		found = FALSE;
@@ -126,13 +129,23 @@ void * writer_thr(void * arg) {
 				   Additionally, your code must also introduce checks/test to detect possible corruption due to race condition from CS violations.
 				*/
 				/* TODO YOUR CODE FOR THE WRITER GOES IN HERE */
-				/* makes the write long duration - PLACE THIS IN THE CORRECT PLACE SO AS TO INTRODUCE LATENCY IN WRITE before going for next 'j' */
-				rest();                 
+				pthread_mutex_lock(&rw_lock);
+				temp_accno = account_list[i].accno;
+				temp_balance = account_list[i].balance;
+				account_list[i].accno = INVALID_ACCNO;
+				account_list[i].balance = update_acc[j].balance;
+				account_list[i].accno = temp_accno;
+				fprintf(fd, "iter %d: Account number = %d [%d]: old balance = %6.2f, new balance = %6.2f\n", j,
+                                   account_list[i].accno, update_acc[j].accno, temp_balance, account_list[i].balance);
+				pthread_mutex_unlock(&rw_lock);
+				found = TRUE;
 			}
 		}
 		if (!found) {
 			fprintf(fd, "Failed to find account number %d!\n", update_acc[j].accno);
 		}
+		/* makes the write long duration - PLACE THIS IN THE CORRECT PLACE SO AS TO INTRODUCE LATENCY IN WRITE before going for next 'j' */
+		rest();                 
 	}   // end test-set for-loop
 	fclose(fd);
 	return NULL;
@@ -143,7 +156,8 @@ void * writer_thr(void * arg) {
 */
 void * reader_thr(void *arg) {
 	printf("Reader thread ID %ld\n", pthread_self());
-	srand((unsigned int) (uintptr_t) &arg);   /* set random number seed for this reader */
+	/* set random number seed for this reader */
+	srand((unsigned int) (uintptr_t) &arg);
 	
 	int i, j;
 	int r_idx;
@@ -184,13 +198,24 @@ void * reader_thr(void *arg) {
 		/* Now read the shared data structure */
 		found = FALSE;
 		for (i = 0; i < SIZE;i++) {
-			rest();
 			if (account_list[i].accno == read_acc[j].accno) {
 				/* Now lock and update */
 				/* TODO YOUR CODE FOR THE READER GOES IN HERE */
-				
+				pthread_mutex_lock(&r_lock);
+				read_count++;
+				if (read_count == 1) { pthread_mutex_lock(&rw_lock); }
+				pthread_mutex_unlock(&r_lock);
+				read_acc[j].balance = account_list[i].balance;
+				fprintf(fd, "iter %d: Account number = %d [%d], balance read = %6.2f\n", j,
+					account_list[i].accno, read_acc[j].accno, read_acc[j].balance);
+				pthread_mutex_lock(&r_lock);
+				read_count--;
+				if (read_count == 0) { pthread_mutex_unlock(&rw_lock); }
+				pthread_mutex_unlock(&r_lock);
+				found = TRUE;
 			}
 		}
+		rest();
 		if (!found) {
 			fprintf(fd, "Failed to find account number %d!\n", read_acc[j].accno);
 		}
@@ -283,7 +308,6 @@ int main (int argc, char *argv[]) {
 			fprintf(stderr, "%s: error creating thread: %s\n", BIN_NAME, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
-		printf("reader thread id: %ld\n", (long int) reader_idx[i]);
 	}
 	printf("Done creating reader threads!\n");
 	
@@ -295,7 +319,6 @@ int main (int argc, char *argv[]) {
 			fprintf(stderr, "%s: error creating thread: %s\n", BIN_NAME, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
-		printf("writer thread id: %ld\n", (long int) reader_idx[i]);
 	}
 	printf("Done creating writer threads!\n");
 	// Join all reader and writer threads.
