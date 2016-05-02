@@ -336,5 +336,9 @@ int main (int argc, char *argv[]) {
 	pthread_mutex_destroy(&r_lock);
 	pthread_mutex_destroy(&rw_lock);
 	
+	// clean up memory allocations
+	free(reader_idx);
+	free(writer_idx);
+
 	return 0;
 }
