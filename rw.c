@@ -239,16 +239,24 @@ void usage(char *str) {
 	return;
 }
 
+// convert the given string argument to an integer and check for validity
 long int check_int_arg(char *arg) {
+	// pointer for checking string arg
 	char *endptr;
+	// int for converted string arg
 	long int intarg;
+	// reset errno before function call to catch any errors
 	errno = 0;
+	// convert string arg to integer in base 10
 	intarg = strtol(arg, &endptr, 10);
+	// check for various errors from strtol function
 	if ((errno == ERANGE && (intarg == LONG_MAX || intarg == LONG_MIN)) || (errno != 0 && intarg == 0)) {
+		// print error, usage, and exit if error found
 		fprintf(stderr, "%s: error converting argument to integer: %s\n", BIN_NAME, strerror(errno));
 		usage(BIN_NAME);
 		exit(EXIT_FAILURE);
 	}
+	// if the string arg contained non-number values or was 0 or less, print usage and exit
 	if ((endptr == arg) || (*endptr != '\0') || (intarg <= 0)) {
 		usage(BIN_NAME);
 		exit(EXIT_FAILURE);
@@ -276,7 +284,9 @@ int main (int argc, char *argv[]) {
 	   For reference on getopt(), see "man getopt(3)" 
 	*/
 	/* TODO YOUR CODE GOES HERE */
+	// integer for getopt return code
 	int opt;
+	// check for command line options using getopt
 	while ((opt = getopt(argc, argv, "r:w:")) != -1) {
 		switch (opt) {	
 			case 'r':
@@ -286,6 +296,7 @@ int main (int argc, char *argv[]) {
 				WRITE_THREADS = (int) check_int_arg(optarg);
 				break;
 			default:
+				// if an invalid option is specified, print usage and exit
 				usage(BIN_NAME);
 				exit(EXIT_FAILURE);
 		}
@@ -302,6 +313,7 @@ int main (int argc, char *argv[]) {
 		/* TODO YOUR CODE GOES HERE */
 		// create threads
 		if (pthread_create(reader_idx + i, NULL, reader_thr, (void *) (uintptr_t) seed) != 0) {
+			// print error and exit if problem creating threads
 			fprintf(stderr, "%s: error creating thread: %s\n", BIN_NAME, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
@@ -313,6 +325,7 @@ int main (int argc, char *argv[]) {
 		seed = (unsigned int) time(&t);
 		/* YOUR CODE GOES HERE */
 		if (pthread_create(writer_idx + i, NULL, writer_thr, (void *) (uintptr_t) seed) != 0) {
+			// print error and exit if problem creating threads
 			fprintf(stderr, "%s: error creating thread: %s\n", BIN_NAME, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
@@ -320,12 +333,13 @@ int main (int argc, char *argv[]) {
 	printf("Done creating writer threads!\n");
 	// Join all reader and writer threads.
 	//TODO YOUR CODE GOES HERE. 
+	// join all reader threads
 	for (i = 0;i < READ_THREADS;i++) {
 		pthread_join(reader_idx[i], &result);
 		printf("Joined reader %d id %ld\n", i, reader_idx[i]);
 	}
 	printf("All reader threads joined.\n");
-	 
+	// join all writer threads
 	for (i = 0;i < WRITE_THREADS;i++) {
 		pthread_join(writer_idx[i], &result);
 		printf("Joined writer %d id %ld\n", i, reader_idx[i]);
