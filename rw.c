@@ -4,30 +4,30 @@
 
    SUBMISSION GUIDELEINES:
 	1. Save this file rw_skeleton.c as rw.c for the submission. 
-
-	2. You are to submit your assignment using the Lab #2 Dropbox on the course D2L website as two files - rw.h and rw.c
-
-	3. Do not zip the file, nor submit any additional, unnecessary files. In particular, do not submit project files created 
-       by an IDE you may be using (e.g., Eclipse). There is no reason to submit a compressed or archived version, so try to 
-       properly follow instructions and submit the single C source file, properly named.
-
-	3. Your code must compile, otherwise you get a zero (0). We are not going to try to read through code to assess what parts are written or not.
-
-	4. Code that compiles but fails to run on any test cases will also probably receive a zero.
-
-    5. Points will be deducted for each test case that the code fails to run on.
-
-    6. You should not be getting any warnings from GCC, so make certain you check for this, as we will.
-
-    7. Your program must error check the original call and all library calls.
 	
-    8. In the case of an error with a library call, print the standard system message (using either perror() or strerror()). 
+	2. You are to submit your assignment using the Lab #2 Dropbox on the course D2L website as two files - rw.h and rw.c
+	
+	3. Do not zip the file, nor submit any additional, unnecessary files. In particular, do not submit project files created 
+	   by an IDE you may be using (e.g., Eclipse). There is no reason to submit a compressed or archived version, so try to 
+	   properly follow instructions and submit the single C source file, properly named.
+	
+	3. Your code must compile, otherwise you get a zero (0). We are not going to try to read through code to assess what parts are written or not.
+	
+	4. Code that compiles but fails to run on any test cases will also probably receive a zero.
+	
+	5. Points will be deducted for each test case that the code fails to run on.
+	
+	6. You should not be getting any warnings from GCC, so make certain you check for this, as we will.
+	
+	7. Your program must error check the original call and all library calls.
+	    
+	8. In the case of an error with a library call, print the standard system message (using either perror() or strerror()). 
 	   You may wish to duplicate the format that most Linux/UNIX programs use, which is to prefix the message with the name of 
-       the program followed by a colon, give an informative message followed by a colon, and end with the system error message. 
+	   the program followed by a colon, give an informative message followed by a colon, and end with the system error message. 
 	   E.g., mygrep: cannot open file: no such file).
 	
 	9. You are free to use any reasonable indentation style, but you must turn in reasonably indented and readable C code, or you will lose points!
-
+	
 	10. Since we still have to look at various parts of your code to grade it, code must be appropriately indented and use a reasonable style. 
 */
 
@@ -133,7 +133,7 @@ void * writer_thr(void * arg) {
 				account_list[i].balance = update_acc[j].balance;
 				account_list[i].accno = temp_accno;
 				fprintf(fd, "Account number = %d [%d]: old balance = %6.2f, new balance = %6.2f\n",
-                                   account_list[i].accno, update_acc[j].accno, temp_balance, account_list[i].balance);
+					account_list[i].accno, update_acc[j].accno, temp_balance, account_list[i].balance);
 				pthread_mutex_unlock(&rw_lock);
 				found = TRUE;
 			}
@@ -339,6 +339,6 @@ int main (int argc, char *argv[]) {
 	// clean up memory allocations
 	free(reader_idx);
 	free(writer_idx);
-
+	
 	return 0;
 }
