@@ -249,7 +249,7 @@ long int check_int_arg(char *arg) {
 		usage(BIN_NAME);
 		exit(EXIT_FAILURE);
 	}
-	if ((endptr == arg) || (*endptr != '\0')) {
+	if ((endptr == arg) || (*endptr != '\0') || (intarg <= 0)) {
 		usage(BIN_NAME);
 		exit(EXIT_FAILURE);
 	}
