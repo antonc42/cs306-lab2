@@ -286,14 +286,18 @@ int main (int argc, char *argv[]) {
 	/* TODO YOUR CODE GOES HERE */
 	// integer for getopt return code
 	int opt;
+	// flag for if any options were found
+	int foundarg = 0;
 	// check for command line options using getopt
 	while ((opt = getopt(argc, argv, "r:w:")) != -1) {
 		switch (opt) {	
 			case 'r':
 				READ_THREADS = (int) check_int_arg(optarg);
+				foundarg++;
 				break;
 			case 'w':
 				WRITE_THREADS = (int) check_int_arg(optarg);
+				foundarg++;
 				break;
 			default:
 				// if an invalid option is specified, print usage and exit
@@ -301,6 +305,7 @@ int main (int argc, char *argv[]) {
 				exit(EXIT_FAILURE);
 		}
 	}
+	if (foundarg < 2) { usage(BIN_NAME); exit(EXIT_FAILURE); }
 	
 	/* holds thread IDs of readers */
 	pthread_t* reader_idx = (pthread_t *) malloc(sizeof(pthread_t) * READ_THREADS);
