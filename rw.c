@@ -125,7 +125,7 @@ void * writer_thr(void * arg) {
 				   account_list[i].accno, update_acc[j].accno, account_list[i].balance, update_acc[j].balance);
 				   Additionally, your code must also introduce checks/test to detect possible corruption due to race condition from CS violations.
 				*/
-				/* TODO YOUR CODE FOR THE WRITER GOES IN HERE */
+				/* YOUR CODE FOR THE WRITER GOES IN HERE */
 				pthread_mutex_lock(&rw_lock);
 				temp_accno = account_list[i].accno;
 				temp_balance = account_list[i].balance;
@@ -197,7 +197,7 @@ void * reader_thr(void *arg) {
 		for (i = 0; i < SIZE;i++) {
 			if (account_list[i].accno == read_acc[j].accno) {
 				/* Now lock and update */
-				/* TODO YOUR CODE FOR THE READER GOES IN HERE */
+				/* YOUR CODE FOR THE READER GOES IN HERE */
 				pthread_mutex_lock(&r_lock);
 				read_count++;
 				if (read_count == 1) { pthread_mutex_lock(&rw_lock); }
@@ -283,7 +283,7 @@ int main (int argc, char *argv[]) {
 	   the usage message using the usage() function defined above and exit. 
 	   For reference on getopt(), see "man getopt(3)" 
 	*/
-	/* TODO YOUR CODE GOES HERE */
+	/* YOUR CODE GOES HERE */
 	// integer for getopt return code
 	int opt;
 	// flag for if any options were found
@@ -315,7 +315,7 @@ int main (int argc, char *argv[]) {
 	/* create readers */
 	for (i = 0;i < READ_THREADS;i++) {
 		seed = (unsigned int) time(&t);
-		/* TODO YOUR CODE GOES HERE */
+		/* YOUR CODE GOES HERE */
 		// create threads
 		if (pthread_create(reader_idx + i, NULL, reader_thr, (void *) (uintptr_t) seed) != 0) {
 			// print error and exit if problem creating threads
@@ -337,7 +337,7 @@ int main (int argc, char *argv[]) {
 	}
 	printf("Done creating writer threads!\n");
 	// Join all reader and writer threads.
-	//TODO YOUR CODE GOES HERE. 
+	//YOUR CODE GOES HERE. 
 	// join all reader threads
 	for (i = 0;i < READ_THREADS;i++) {
 		pthread_join(reader_idx[i], &result);
