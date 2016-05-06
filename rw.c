@@ -114,6 +114,7 @@ void * writer_thr(void * arg) {
 	for (j = 0; j < WRITE_ITR;j++) {
 		found = FALSE;
 		/* Now update */
+		pthread_mutex_lock(&rw_lock);
 		for (i = 0; i < SIZE;i++) {
 			if (account_list[i].accno == update_acc[j].accno) {
 				/* lock and update location */
@@ -126,7 +127,6 @@ void * writer_thr(void * arg) {
 				   Additionally, your code must also introduce checks/test to detect possible corruption due to race condition from CS violations.
 				*/
 				/* YOUR CODE FOR THE WRITER GOES IN HERE */
-				pthread_mutex_lock(&rw_lock);
 				temp_accno = account_list[i].accno;
 				temp_balance = account_list[i].balance;
 				account_list[i].accno = INVALID_ACCNO;
@@ -134,10 +134,10 @@ void * writer_thr(void * arg) {
 				account_list[i].accno = temp_accno;
 				fprintf(fd, "Account number = %d [%d]: old balance = %6.2f, new balance = %6.2f\n",
 					account_list[i].accno, update_acc[j].accno, temp_balance, account_list[i].balance);
-				pthread_mutex_unlock(&rw_lock);
 				found = TRUE;
 			}
 		}
+		pthread_mutex_unlock(&rw_lock);
 		if (!found) {
 			fprintf(fd, "Failed to find account number %d!\n", update_acc[j].accno);
 		}
@@ -194,24 +194,24 @@ void * reader_thr(void *arg) {
 	for (j = 0; j < READ_ITR;j++) {
 		/* Now read the shared data structure */
 		found = FALSE;
+		pthread_mutex_lock(&r_lock);
+		read_count++;
+		if (read_count == 1) { pthread_mutex_lock(&rw_lock); }
+		pthread_mutex_unlock(&r_lock);
 		for (i = 0; i < SIZE;i++) {
 			if (account_list[i].accno == read_acc[j].accno) {
 				/* Now lock and update */
 				/* YOUR CODE FOR THE READER GOES IN HERE */
-				pthread_mutex_lock(&r_lock);
-				read_count++;
-				if (read_count == 1) { pthread_mutex_lock(&rw_lock); }
-				pthread_mutex_unlock(&r_lock);
 				read_acc[j].balance = account_list[i].balance;
 				fprintf(fd, "Account number = %d [%d], balance read = %6.2f\n",
 					account_list[i].accno, read_acc[j].accno, read_acc[j].balance);
-				pthread_mutex_lock(&r_lock);
-				read_count--;
-				if (read_count == 0) { pthread_mutex_unlock(&rw_lock); }
-				pthread_mutex_unlock(&r_lock);
 				found = TRUE;
 			}
 		}
+		pthread_mutex_lock(&r_lock);
+		read_count--;
+		if (read_count == 0) { pthread_mutex_unlock(&rw_lock); }
+		pthread_mutex_unlock(&r_lock);
 		rest();
 		if (!found) {
 			fprintf(fd, "Failed to find account number %d!\n", read_acc[j].accno);
